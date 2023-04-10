@@ -1,0 +1,35 @@
+{
+  "products": [
+    {
+      "title": "varshayadav",
+      "category": "8787878787",
+      "price": "77",
+      "id": 1
+    },
+    {
+      "title": "yyyy",
+      "category": "men's cloth",
+      "price": "109.9",
+      "operation": "add",
+      "id": 2
+    },
+    {
+      "title": "laptop dell",
+      "category": "dell",
+      "price": "55.99",
+      "id": 3
+    },
+    {
+      "title": "formik does not working with new Date",
+      "category": "leptop dell",
+      "price": "109.9",
+      "id": 4
+    },
+    {
+      "title": "ddd",
+      "category": "leptop",
+      "price": "109.9",
+      "id": 5
+    }
+  ]
+}

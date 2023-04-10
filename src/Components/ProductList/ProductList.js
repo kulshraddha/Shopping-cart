@@ -1,107 +1,175 @@
 import React, { useEffect, useState } from 'react';
-import axios from "axios"
-import { CardContent, CardHeader, IconButton } from '@mui/material';
+import axios from 'axios';
+import MuiDatatable from "mui-datatables"; 
+import { Button } from "@mui/material";
 import UserDialog from '../Dialog/UserDialog';
-import Header from '../Header/Header';
-import Button from 'react-bootstrap/Button';
-import Card from 'react-bootstrap/Card';
+import ProductContext from '../productContext/ProdutContext';
+import Swal from 'sweetalert2';
 import { Link } from 'react-router-dom';
-
-const ShopProduct = (product) => {
-    const { id, title, price, category, image , handleEdit,  removeProduct} = product
-    return (
-        //Bootstrap cards for products
-    <div>
-    <Card style={{ width: '18rem', height: 450, width: 350}}>
-      <Card.Img variant="top" src={image} style={{width: 200, height: 200}}/>
-      <Card.Body>
-        <Card.Title>
-        {id} - {title}
-      </Card.Title>
-        <CardContent>${price}</CardContent>
-        <CardContent>{category}</CardContent>
-        <Button variant="primary"><Link to={`/${id}`}style={{color: "#fff", textDecoration:"none"}}>Details</Link></Button>
-        <Button onClick={()=> handleEdit(product)}>Edit</Button>
-        <Button onClick={()=> removeProduct(product)}>Delete</Button>
-      </Card.Body>
-    </Card>
-    </div>
-    )
-}
-
 const ProductList = () => {
-    //fetching products
-    const [products , setProducts] = useState([])
-    //dialog open ro close state
-    const [open, setOpen] = useState(false); 
-    //single product
-    const [product, setProduct] = useState("")
-    const [load, setLoad] = useState(6)
 
-    //api fetching by get method
-    useEffect(()=>{
+  //all products
+  const [products, setProducts] = useState([])
+
+  //state for dialog open and close
+  const [openDialog, setOpenDialog] = useState(false);
+
+  //for single product object state
+  const [initialProduct, setInitialProduct] = useState({});
+
+  //for add new product state
+  const [operation, setOperation] = useState("add");
+
+  const [productDetail, setProductDetail] = useState({});
+
+  //dialog close
+  const handleClose = () => {
+    setOpenDialog(false);
+  };
+
+  //edit product and dialog open 
+  const editUser = (products) => {
+    setOpenDialog(true);
+    setOperation("edit");
+    setInitialProduct(products);
+  };
+
+  //add new Product and dialog open
+  const AddProduct = () => {
+    setOpenDialog(true);
+    setOperation("add");
+  };
+
+  //data fetching
+  const loadUsers = () => {
     axios
-    .get("https://fakestoreapi.com/products")
-    .then((response)=>{
-        setProducts(response.data)
-    })
-    .catch((err)=>{
-        console.log(err);
-    })
-    },[])
+      .get("http://localhost:8989/products")
+      .then((response) => {
+        setProducts(response.data);
+      })
+      .catch(console.log);
+  };
+  useEffect(() => {
+    loadUsers();
+  }, []);
 
-    const loadMore = () => {
-        setLoad((prevValue) => prevValue + 6)
-    
+  //delete product
+  const deleteUser = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axios
+          .delete(`http://localhost:8989/products/${id}`)
+          .then((response) => {
+            loadUsers();
+            Swal.fire("Deleted!", "Your record has been deleted.", "success");
+          })
+          .catch((err) => {
+            console.log(err);
+            Swal.fire("Deleted!", "Your file has not been deleted.", "error");
+          });
       }
+    });
+  };
 
-    const getProduct = ((product)=>{
-     const Index = products.findIndex((prod)=> prod?.id === product?.id)
-     products.splice(Index, 1, product)
-     console.log("productlist", product, products);
-    })
 
-    const removeProduct = (product)=>{
-        var arr = products.filter((prod)=> prod?.id != product?.id)
-        setProducts(arr)
-        console.log("delete", arr);
-    }
 
-    //fuction for edit button
-    const handleEdit = ((product) => {
-        console.log("pro",product);
-        setProduct(product)
-        //dialog open
-        setOpen(true)
-    })
 
-    //dialog close
-    const handleClose = () => setOpen(false);
-    
-    return ( 
-        <>
-        {/* inside header */}
-        <Header/>
+  //table
 
-        {/* rendaring the products */}
-        <section style={{ display: "flex", flexWrap: "wrap"}}>
-          {Array.isArray(products) && products.slice(0, load).map((prod) => {
-            return (
-                <div style={{  width:500, height: 500, padding: 10 }} >
-                    <ShopProduct {...prod} handleEdit={handleEdit} products={products} removeProduct={removeProduct}/>
-                </div>
-            )
-          })}
+  const columns = [
+    {
+      name: "id",
+      label: "ID",
+      options: {
+        sort: true,
+        filter: false,
+      },
+    },
+    {
+      name: "title",
+      label: "Title",
+      options: {
+        sort: true,
+        filter: false,
+      },
+    },
+    {
+      name: "category",
+      label: "category",
+      options: {
+        sort: true,
+        filter: false,
+      },
+    },
+    {
+      name: "price",
+      label: "price",
+      options: {
+        sort: true,
+        filter: false,
+      },
+    },
+    {
+      name: "action",
+      label: "Action",
+      options: {
+        sort: false,
+        filter: false,
+        customBodyRenderLite: (index) => {
+          const product = products[index];
+          console.log("id",product);
+          return (
+            <>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => editUser(product)}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={() => deleteUser(product.id)}
+              >
+                Delete
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+              //  onClick={() => console.log("jjj",product.id)}
+              >
+                 <Link to={`${product.id}`}>Details</Link>
+                 
+              </Button>
+            </>
+          );
+        },
+      },
+    },
+  ];
 
-          <UserDialog  open={open} handleClose={handleClose} product={product} getProduct={getProduct} />
-        </section>
-
-        {/* loadMore button */}
-        <div style={{textAlign:"center"}}>
-        <Button variant='primary' onClick={loadMore} >load more</Button>
-      </div>
-        </>
-     );
+  return ( 
+    <>
+     <ProductContext.Provider
+        value={{ loadUsers, handleClose, operation, initialProduct }}
+      >
+        <UserDialog open={openDialog} handleClose={handleClose} />
+      </ProductContext.Provider>
+    <Button variant="contained" onClick={AddProduct}>
+        New+
+      </Button>
+     <MuiDatatable columns={columns} data={products}/>
+    </>
+   );
 }
  
 export default ProductList;

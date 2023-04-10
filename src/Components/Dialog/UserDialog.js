@@ -1,12 +1,15 @@
 import { Dialog, DialogContent, DialogTitle } from '@mui/material';
 import React from 'react';
 import EditForm from '../EditForm/EditForm';
-const UserDialog = ({open, handleClose, product, getProduct}) => {
+import { useContext } from "react";
+import ProductContext from '../productContext/ProdutContext';
+const UserDialog = ({open }) => {
+    const { handleClose, operation } = useContext(ProductContext);
     return ( 
         <Dialog  open={open} onClose={handleClose}>
-        <DialogTitle>Product Form</DialogTitle>
+        <DialogTitle>{operation == "edit" ? "Edit" : "Add"} Product Form</DialogTitle>
         <DialogContent>
-            <EditForm product={product} getProduct={getProduct}/>
+            <EditForm/>
         </DialogContent>
         </Dialog>
      );

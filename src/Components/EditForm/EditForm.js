@@ -1,54 +1,88 @@
-import React, { useState, useEffect } from "react";
-import TextField from "@mui/material/TextField";
-import Grid from "@mui/material/Grid";
-import Button from "@mui/material/Button";
-import {Formik, useFormik} from "formik"
-import validateSchema from "../Validation/Validation";
+import React, { useContext, useEffect, useState } from 'react';
+import { Grid, Box, TextField, Button } from "@mui/material";
+import { Formik, useFormik } from 'formik';
+import * as yup from "yup"
+import axios from 'axios';
+import validateSchema from '../Validation/Validation';
+import ProductContext from '../productContext/ProdutContext';
+const EditForm = () => {
+  const { loadUsers, handleClose, operation, initialProduct } =
+  useContext(ProductContext);
 
+  //product form state
+  const [productForm, setproductForm] = useState({
+    title: "",
+    category: "",
+    price: "",
+  });
 
-const EditForm = ({product, getProduct}) => {
-   
-  // const [users, setUsers] = useState({});
-  const [editProduct, setEditProduct] = useState({title:"", price:"", category:""});
-
-useEffect(()=>{
- setEditProduct(product)
-},[])
-
+  //change the values
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEditProduct({ ...editProduct, [name]: value });
+    setproductForm({ ...productForm, [name]: value });
   };
- 
+
+  //to take prifilled values for edit
+  useEffect(() => {
+    if (initialProduct) setproductForm({ ...productForm, ...initialProduct });
+  }, [initialProduct]);
+
+
+// for edit put method call or new product added
   const handleSubmit = () => {
-    console.log("user",editProduct);
-    
+    if (productForm.title && productForm.price) {
+      if (operation == "edit") {
+        axios
+          .put(`http://localhost:8989/products/${productForm.id}`, productForm)
+          .then((response) => {
+            alert("product updated...");
+            loadUsers();
+            handleClose();
+          })
+          .catch((err) => {
+            console.log(err);
+            alert("Could not update the product");
+          });
+      } else {
+        axios
+          .post("http://localhost:8989/products", productForm)
+          .then((response) => {
+            alert("product Added..");
+            loadUsers();
+            handleClose();
+          })
+          .catch((err) => {
+            console.log(err);
+            alert("Could not created the product");
+          });
+      }
+    }
   };
-  useEffect(()=>{
-    getProduct(editProduct)
-     },[editProduct])
 
-
+ const formik = useFormik({
+  initialValues: productForm,
+  validationSchema: yup.object({
+    title: yup.string()
+      .required('title is Required!'),
+    category: yup.string()
+    .required('catagoty is required!'),
+    price: yup.string()
+    .required('price is required!'),
+  })
+ })
+console.log("products", productForm);
+  //product form
+  return ( 
+    <>
     
-  return (
-
-    <Formik  
-      initialValues={{editProduct}}
-      validationSchema={validateSchema}
-    >
-      {({handleBlur, errors, touched}) => (
-   
-      <Grid container spacing={2}>
+    <Box component="form">
+    <Grid container spacing={2}>
       <Grid item xs={12}>
         <TextField
           label="title"
           name="title"
-          value={editProduct.title}
+          value={productForm.title}
           onChange={handleChange}
-          onBlur={handleBlur}
-          error={touched?.title && errors?.title ? true : false}
-          helperText={touched?.title && errors?.title}
-          varient="outlined"
           fullWidth
   
         />
@@ -57,11 +91,8 @@ useEffect(()=>{
         <TextField
           label="category"
           name="category"            
-          value={editProduct.category}
+          value={productForm.category}
           onChange={handleChange}
-          onBlur={handleBlur}
-          error={touched?.category && errors?.category ? true : false}
-          helperText={touched?.category && errors?.category}
           varient="outlined"
           fullWidth
         />
@@ -71,29 +102,23 @@ useEffect(()=>{
         <TextField
           label="price"
           name="price"
-          value={editProduct.price}
+          value={productForm.price}
           onChange={handleChange}
-          onBlur={handleBlur}
-          error={touched?.price && errors?.price ? true : false}
-          helperText={touched?.price && errors?.price}
           varient="outlined"
           fullWidth
         />
       </Grid>
      
-      <Button
-       
-        color="primary"
-        variant="contained"
-        style={{marginLeft: 250, marginTop: 20}}
-        onClick={handleSubmit}
-      >
-        Add
-      </Button>
+      <Grid item xs={12}>
+            <Button variant="contained" color="primary" onClick={handleSubmit}>
+              {operation == "edit" ? "update" : "create"}
+            </Button>
+          </Grid>
     </Grid>
-     )}
-    </Formik>
-  
-  )
+    </Box>
+    
+  </>
+   );
 }
-export default EditForm
+ 
+export default EditForm;
